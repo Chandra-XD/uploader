@@ -1,7 +1,7 @@
 var createError = require('http-errors');
 var express = require('express');
 var multer = require('multer');
-var { v4: rnd } = require('uuid');
+var { v4: uuidv4 } = require('uuid');
 var path = require('path');
 var fs = require('fs-extra');
 var schedule = require('node-schedule');
