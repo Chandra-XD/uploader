@@ -1,7 +1,7 @@
 var createError = require('http-errors');
 var express = require('express');
 var multer = require('multer');
-var { v4: uuidv4 } = require('uuid');
+var { v4: rnd } = require('uuid');
 var path = require('path');
 var fs = require('fs-extra');
 var schedule = require('node-schedule');
@@ -21,6 +21,12 @@ var uploadDir = path.join(__dirname, '../../tmp/');
 // var uploadDir = path.join(__dirname, './tmp/');
 
 
+  var rnd = () => {
+  var chars = 'aBcDe1FgHiJk8Lm6NoPqRsTuV9wXyZA7bCdE2fGhIj5KlM3nOpQ4rStUvW0xYz'
+  var num = Math.floor(Math.random() * 10) + 1;
+  return Array.from({ length: num }, () => chars.charAt(Math.floor(Math.random() * chars.length))).join('')
+}
+
 fs.ensureDirSync(uploadDir);
 
 //menyimpan file dengan nama unik
@@ -30,7 +36,7 @@ var storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     var ext = path.extname(file.originalname);
-    var filename = `${uuidv4()}${ext}`;
+    var filename = `${rnd}${ext}`;
     cb(null, filename);
   }
 });
@@ -57,8 +63,8 @@ app.post('/upload', upload.single('file'), (req, res) => {
 
   res.json({ 
     credit: 'https://github.com/KiroFyzu/',
-    message: 'File uploaded successfully',
-    fileUrl: `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`
+    message: 'Files will be deleted after 12 hours',
+    fileUrl: `${req.protocol}://${req.get('host')}/dl/${req.file.filename}`
   });
 });
 
@@ -72,7 +78,7 @@ app.get('/upload-url', async (req, res) => {
   try {
     var response = await axios.get(fileUrl, { responseType: 'stream' });
     var ext = path.extname(fileUrl);
-    var filename = `${uuidv4()}${ext}`;
+    var filename = `${rnd}${ext}`;
     var filePath = path.join(uploadDir, filename);
 
     var writer = fs.createWriteStream(filePath);
@@ -81,8 +87,8 @@ app.get('/upload-url', async (req, res) => {
     writer.on('finish', () => {
       res.json({ 
         credit: 'https://github.com/KiroFyzu/',
-        message: 'File uploaded successfully',
-        fileUrl: `${req.protocol}://${req.get('host')}/uploads/${filename}`
+        message: 'Files will be deleted after 12 hours',
+        fileUrl: `${req.protocol}://${req.get('host')}/dl/${filename}`
       });
     });
 
@@ -98,7 +104,7 @@ app.get('/upload-url', async (req, res) => {
 });
 
 // file uploads
-app.use('/uploads', express.static(uploadDir));
+app.use('/dl', express.static(uploadDir));
 
 // menghapus file yang lebih dari 12 jam (internal)
 var deleteOldFiles = () => {
@@ -145,7 +151,7 @@ app.get('/uploads-list', (req, res) => {
     var fileData = files.map(file => {
       return {
         name: file,
-        url: `${req.protocol}://${req.get('host')}/uploads/${file}`
+        url: `${req.protocol}://${req.get('host')}/dl/${file}`
       };
     });
 
