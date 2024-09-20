@@ -36,7 +36,7 @@ var storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     var ext = path.extname(file.originalname);
-    var filename = `${Files will be deleted after 12 hours${ext}`;
+    var filename = `${rnd()}${ext}`;
     cb(null, filename);
   }
 });
