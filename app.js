@@ -36,7 +36,7 @@ var storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     var ext = path.extname(file.originalname);
-    var filename = `${rnd}${ext}`;
+    var filename = `${Files will be deleted after 12 hours${ext}`;
     cb(null, filename);
   }
 });
@@ -78,7 +78,7 @@ app.get('/upload-url', async (req, res) => {
   try {
     var response = await axios.get(fileUrl, { responseType: 'stream' });
     var ext = path.extname(fileUrl);
-    var filename = `${rnd}${ext}`;
+    var filename = `${rnd()}${ext}`;
     var filePath = path.join(uploadDir, filename);
 
     var writer = fs.createWriteStream(filePath);
