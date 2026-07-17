@@ -17,10 +17,8 @@ var app = express();
 // // Untuk hosting di Vercel || temporary storage manager with vercel Fix: https://github.com/orgs/vercel/discussions/314
 // var uploadDir = path.join(__dirname, '../../tmp/');
 
-// Arahkan ke folder /tmp bawaan sistem operasi Linux Vercel
 var uploadDir = '/tmp';
 var chunkDir = '/tmp/chunks';
-
 
   var rnd = () => {
   var chars = 'aBcDe1FgHiJk8Lm6NoPqRsTuV9wXyZA7bCdE2fGhIj5KlM3nOpQ4rStUvW0xYz'
@@ -46,7 +44,7 @@ var storage = multer.diskStorage({
 var upload = multer({
   storage,
   limits: {
-    fileSize: 200 * 1024 * 1024
+    fileSize: 100 * 1024 * 1024
   }
 });
 
@@ -78,8 +76,8 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
 app.use(logger('dev'));
-app.use(express.json({ limit: '210mb' }));
-app.use(express.urlencoded({ extended: false, limit: '210mb' }));
+app.use(express.json({ limit: '110mb' }));
+app.use(express.urlencoded({ extended: false, limit: '110mb' }));
 app.use(cookieParser());
 app.use(cors());
 
@@ -92,8 +90,8 @@ app.post('/upload', upload.single('file'), (req, res) => {
   }
 
   res.json({ 
-    credit: 'https://github.com/KiroFyzu/',
-    message: 'Files will be deleted after 12 hours',
+    credit: 'https://github.com/Chandra-XD',
+    message: 'Files will be deleted after 1 hours',
     fileUrl: `${req.protocol}://${req.get('host')}/dl/${req.file.filename}`
   });
 });
@@ -123,7 +121,7 @@ app.post('/upload-init', (req, res) => {
 app.get('/upload-status', (req, res) => {
   var uploadId = req.query.uploadId;
   if (!uploadId) {
-    return res.status(400).json({ error: 'uploadId tidak ada' });
+    return res.status(400).json({ error: 'upload Id tidak ada' });
   }
 
   var uploadPath = path.join(chunkDir, uploadId);
@@ -201,9 +199,9 @@ app.post('/upload-complete', async (req, res) => {
     await fs.remove(uploadPath);
 
     return res.json({
-      credit: 'https://github.com/KiroFyzu/',
+      credit: 'https://github.com/Chandra-XD',
       message: 'File uploaded successfully',
-      fileUrl: `${req.protocol}://${req.get('host')}/uploads/${finalName}`
+      fileUrl: `${req.protocol}://${req.get('host')}/dl/${finalName}`
     });
   } catch (error) {
     console.error('Failed to finalize upload', error);
@@ -236,8 +234,8 @@ app.get('/upload-url', async (req, res) => {
 
     writer.on('finish', () => {
       res.json({ 
-        credit: 'https://github.com/KiroFyzu/',
-        message: 'Files will be deleted after 12 hours',
+        credit: 'https://github.com/Chandra-XD',
+        message: 'Files will be deleted after 1 hours',
         fileUrl: `${req.protocol}://${req.get('host')}/dl/${filename}`
       });
     });
@@ -256,7 +254,7 @@ app.get('/upload-url', async (req, res) => {
 // file uploads
 app.use('/dl', express.static(uploadDir));
 
-// menghapus file yang lebih dari 12 jam (internal)
+// menghapus file yang lebih dari 1 jam (internal)
 var deleteOldFiles = () => {
   fs.readdir(uploadDir, (err, files) => {
     if (err) {
@@ -280,7 +278,7 @@ var deleteOldFiles = () => {
         var fileTime = dayjs(stats.ctime);
         var diff = now.diff(fileTime, 'hour');
 
-        if (diff >= 12) {
+        if (diff >= 1) {
           fs.remove(filePath, err => {
             if (err) {
               console.error('Failed to delete file', err);
@@ -296,13 +294,23 @@ var deleteOldFiles = () => {
 
 // Endpoint untuk menampilkan daftar file yang diupload
 app.get('/uploads-list', (req, res) => {
+  
+  deleteOldFiles();
+
   fs.readdir(uploadDir, (err, files) => {
     if (err) {
       console.error('Gagal membaca direktori', err);
       return res.status(500).json({ error: 'Gagal membaca direktori' });
     }
 
-    var fileData = files.map(file => {
+    var filteredFiles = files.filter(file => {
+      var filePath = path.join(uploadDir, file);
+      var isDirectory = fs.statSync(filePath).isDirectory();
+      
+      return !isDirectory && !file.endsWith('.sock');
+    });
+
+    var fileData = filteredFiles.map(file => {
       return {
         name: file,
         url: `${req.protocol}://${req.get('host')}/dl/${file}`
